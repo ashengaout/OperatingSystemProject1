@@ -11,7 +11,7 @@ public class FCFSScheduler {
         this.FCFS = scheduler();
     }
 
-    public List<ExecutionRecord> scheduler() {
+    private List<ExecutionRecord> scheduler() {
         List<ExecutionRecord> timeline = new ArrayList<>();
 
         processList.sort(Comparator.comparingInt(Process::getArrivalTime));
@@ -25,6 +25,7 @@ public class FCFSScheduler {
             p.calculateWT();
 
             timeline.add(new ExecutionRecord(p, p.getStartTime(), p.getEndTime()));
+            currentTime = p.getEndTime();
         }
 
         return timeline;
@@ -37,7 +38,8 @@ public class FCFSScheduler {
             sum += record.getProcess().getWaitingTime();
         }
 
-        return (double) sum /count;
+        double res = Math.round(((double) sum /count) * 100.0) / 100.0;
+        return res;
     }
 
     public double calculateAvgTAT() {
@@ -47,6 +49,11 @@ public class FCFSScheduler {
             sum += record.getProcess().getTurnAroundTime();
         }
 
-        return (double) sum /count;
+        double res = Math.round(((double) sum /count) * 100.0) / 100.0;
+        return res;
+    }
+
+    public List<ExecutionRecord> getFCFS() {
+        return FCFS;
     }
 }

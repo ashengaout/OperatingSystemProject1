@@ -13,7 +13,7 @@ public class SJPScheduler {
     }
 
     //shortest job first nonpreemptive scheduling
-    public List<ExecutionRecord> scheduler() {
+    private List<ExecutionRecord> scheduler() {
         List<ExecutionRecord> timeline = new ArrayList<>();
         int currentTime = 0;
 
@@ -42,8 +42,8 @@ public class SJPScheduler {
             Process p = readyList.poll();
             p.setStartTime(currentTime);
             p.setEndTime(currentTime+p.getBurstTime());
-            p.calculateWT();
             p.calculateTAT();
+            p.calculateWT();
 
             timeline.add(new ExecutionRecord(p, p.getStartTime(), p.getEndTime()));
             currentTime = p.getEndTime(); //advances current time
@@ -60,7 +60,9 @@ public class SJPScheduler {
             sum += record.getProcess().getWaitingTime();
         }
 
-        return (double) sum /count;
+        double res = Math.round(((double) sum /count) * 100.0) / 100.0;
+
+        return res;
     }
 
     public double calculateAvgTAT() {
@@ -70,7 +72,12 @@ public class SJPScheduler {
             sum += record.getProcess().getTurnAroundTime();
         }
 
-        return (double) sum /count;
+        double res = Math.round(((double) sum /count) * 100.0) / 100.0;
+
+        return res;
     }
 
+    public List<ExecutionRecord> getSJP() {
+        return SJP;
+    }
 }

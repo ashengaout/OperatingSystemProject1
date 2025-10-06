@@ -26,7 +26,7 @@ public class Process {
     }
 
     void calculateWT() {
-        this.waitingTime = turnAroundTime-burstTime;
+        this.waitingTime = startTime-arrivalTime;
     }
 
     public int getID() {
