@@ -2,16 +2,14 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class FCFSScheduler {
-    private final List<Process> processList;
+public class FCFSScheduler implements Scheduler{
     private List<ExecutionRecord> FCFS;
 
     public FCFSScheduler(List<Process> processList) {
-        this.processList = processList;
-        this.FCFS = scheduler();
+        this.FCFS = schedule(processList);
     }
 
-    private List<ExecutionRecord> scheduler() {
+    public List<ExecutionRecord> schedule(List<Process> processList) {
         List<ExecutionRecord> timeline = new ArrayList<>();
 
         processList.sort(Comparator.comparingInt(Process::getArrivalTime));

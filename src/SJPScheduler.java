@@ -1,19 +1,17 @@
 import java.util.*;
 
-public class SJPScheduler {
-    private final List<Process> processList;
+public class SJPScheduler implements Scheduler {
     private final List<ExecutionRecord> SJP;
 
     /**
      * The scheduler class is for storing the results from the SJP algorithm and the FCFS algorithm
      * It can also calculate the average turn around time and wait time for each algorithm */
     public SJPScheduler(List<Process> processList) {
-        this.processList = processList;
-        this.SJP = scheduler();
+        this.SJP = schedule(processList);
     }
 
-    //shortest job first nonpreemptive scheduling
-    private List<ExecutionRecord> scheduler() {
+    @Override
+    public List<ExecutionRecord> schedule(List<Process> processList) {
         List<ExecutionRecord> timeline = new ArrayList<>();
         int currentTime = 0;
 
@@ -80,4 +78,5 @@ public class SJPScheduler {
     public List<ExecutionRecord> getSJP() {
         return SJP;
     }
+
 }
