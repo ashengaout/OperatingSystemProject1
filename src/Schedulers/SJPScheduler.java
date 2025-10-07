@@ -1,16 +1,25 @@
-import java.util.*;
+package Schedulers;
+
+import Core.Process;
+import Memory.MemoryManager;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.PriorityQueue;
 
 public class SJPScheduler implements Scheduler {
     private final List<ExecutionRecord> SJP;
+    private MemoryManager memoryManager;
 
     /**
      * The scheduler class is for storing the results from the SJP algorithm and the FCFS algorithm
      * It can also calculate the average turn around time and wait time for each algorithm */
-    public SJPScheduler(List<Process> processList) {
+    public SJPScheduler(List<Process> processList, int memorySize) {
+        this.memoryManager = new MemoryManager(memorySize);
         this.SJP = schedule(processList);
     }
 
-    @Override
     public List<ExecutionRecord> schedule(List<Process> processList) {
         List<ExecutionRecord> timeline = new ArrayList<>();
         int currentTime = 0;
@@ -37,14 +46,29 @@ public class SJPScheduler implements Scheduler {
             }
 
             //picks shortest job from ready list
-            Process p = readyList.poll();
-            p.setStartTime(currentTime);
-            p.setEndTime(currentTime+p.getBurstTime());
-            p.calculateTAT();
-            p.calculateWT();
+            Process p = readyList.peek();
 
-            timeline.add(new ExecutionRecord(p, p.getStartTime(), p.getEndTime()));
-            currentTime = p.getEndTime(); //advances current time
+            if (p.getMemoryMB() > memoryManager.getTotalMemory()) {
+                System.out.println(STR."Process PID \{p.getID()} requires more memory than total available. Skipping.");
+                readyList.poll(); // remove from queue
+                continue;         // move to next process
+            }
+
+            //wait until memory is available
+            if(memoryManager.allocateProcess(p)) {
+                //run process since memory available
+                p = readyList.poll();
+                p.setStartTime(currentTime);
+                p.setEndTime(currentTime+ p.getBurstTime());
+                p.calculateTAT();
+                p.calculateWT();
+
+                timeline.add(new ExecutionRecord(p, p.getStartTime(), p.getEndTime()));
+                currentTime = p.getEndTime();
+                memoryManager.freeProcess(p);
+            } else {
+                currentTime++;
+            }
         }
 
         return timeline;

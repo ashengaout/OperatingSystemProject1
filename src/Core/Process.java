@@ -1,3 +1,5 @@
+package Core;
+
 public class Process {
     private int ID;
     private int arrivalTime;
@@ -7,6 +9,7 @@ public class Process {
     private int waitingTime;
     private int endTime;
     private int startTime;
+    private int memoryMB;
 
     /**
      * This class is for storing each process instance read from the file
@@ -14,18 +17,19 @@ public class Process {
      * only four variables read from the file will be initialized
      * */
 
-    public Process(int ID, int arrivalTime, int burstTime, int priority) {
+    public Process(int ID, int arrivalTime, int burstTime, int priority, int memory) {
         this.ID = ID;
         this.arrivalTime = arrivalTime;
         this.burstTime = burstTime;
         this.priority = priority;
+        this.memoryMB = memory;
     }
 
-    void calculateTAT() {
+    public void calculateTAT() {
         this.turnAroundTime = endTime-arrivalTime;
     }
 
-    void calculateWT() {
+    public void calculateWT() {
         this.waitingTime = startTime-arrivalTime;
     }
 
@@ -83,5 +87,13 @@ public class Process {
 
     public void setStartTime(int startTime) {
         this.startTime = startTime;
+    }
+
+    public int getMemoryMB() {
+        return memoryMB;
+    }
+
+    public void setMemoryMB(int memoryMB) {
+        this.memoryMB = memoryMB;
     }
 }

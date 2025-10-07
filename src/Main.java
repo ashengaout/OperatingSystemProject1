@@ -1,31 +1,58 @@
+import Core.Process;
+import Schedulers.ExecutionRecord;
+import Schedulers.FCFSScheduler;
+import Schedulers.SJPScheduler;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class Main{
     public static void main(String[] args) {
-        Process p1 = new Process(1, 0, 5, 1);
-        Process p2 = new Process(2, 9, 8, 2);
-        Process p3 = new Process(3, 8, 14, 3);
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter process file directory (press Enter to use default 'process.txt'): ");
+        String input = sc.nextLine().trim();
+        String fileName = input.isEmpty() ? "process.txt" : input;
 
-        List<Process> processList = new ArrayList<>();
-        processList.add(p1);
-        processList.add(p2);
-        processList.add(p3);
+        System.out.print("Enter total memory for this test:  ");
+        int memory = sc.nextInt();
 
-        FCFSScheduler fcfsScheduler = new FCFSScheduler(new ArrayList<>(processList));
+        List<Core.Process> processList = null;
 
+        try {
+            processList = parseProcessInput(fileName);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        if (processList.isEmpty()) {
+            System.out.println("No valid processes found. Exiting.");
+            return;
+        }
+
+        FCFSScheduler fcfsScheduler = new FCFSScheduler(processList, memory);
+
+        System.out.println("First come first serve chart: ");
         printGanttChart(fcfsScheduler.getFCFS());
         System.out.println(STR."Avg wait time: \{fcfsScheduler.calculateAvgWTS()}");
         System.out.println(STR."Avg turnaround time: \{fcfsScheduler.calculateAvgTAT()}");
 
         System.out.println();
 
-        SJPScheduler sjpScheduler = new SJPScheduler(new ArrayList<>(processList));
+        SJPScheduler sjpScheduler = new SJPScheduler(processList, memory);
+
+        System.out.println("Shortest job first chart: ");
         printGanttChart(sjpScheduler.getSJP());
         System.out.println(STR."Avg wait time: \{sjpScheduler.calculateAvgWTS()}");
         System.out.println(STR."Avg turnaround time: \{sjpScheduler.calculateAvgTAT()}");
     }
 
+    //method for printing chart
     public static void printGanttChart(List<ExecutionRecord> records) {
         if(records == null || records.isEmpty()) {
             System.out.println("No records to display.");
@@ -88,5 +115,44 @@ public class Main{
             System.out.print(record.getEndTime());
         }
         System.out.println();
+    }
+
+    //method for processing file input
+    public static List<Core.Process> parseProcessInput(String filename) throws FileNotFoundException {
+        List <Core.Process> processList = new ArrayList<>();
+
+        try(BufferedReader br = new BufferedReader(new FileReader(filename))) {
+            String line;
+            boolean isFirstLine = true;
+
+            while((line = br.readLine()) != null) {
+                line = line.trim();
+
+                //skips empty lines
+                if(line.isEmpty()) continue;
+
+                //skip header row
+                if(isFirstLine) {
+                    isFirstLine = false;
+                    continue;
+                }
+
+                //split by whitespace or tabs
+                String[] parts = line.split("\\s+");
+                if(parts.length != 5) continue; //skip malformed lines
+
+                int pid = Integer.parseInt(parts[0]);
+                int arrival = Integer.parseInt(parts[1]);
+                int burst = Integer.parseInt(parts[2]);
+                int priority = Integer.parseInt(parts[3]);
+                int memory = Integer.parseInt(parts[4]);
+
+                processList.add(new Process(pid, arrival, burst, priority, memory));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return processList;
     }
 }

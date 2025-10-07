@@ -1,3 +1,7 @@
+package Schedulers;
+
+import Core.Process;
+
 public class ExecutionRecord {
     private Process process;
     private int startTime;
