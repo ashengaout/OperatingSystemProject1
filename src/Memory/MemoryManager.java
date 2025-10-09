@@ -35,45 +35,57 @@ public class MemoryManager {
             }
         }
 
-        //no free block found, free terminated process (lazy release)
-        boolean freed = false;
-        for(MemoryBlock block: memoryBlocks) {
-            if(!block.isFree() && block.getProcess().getState() == Process.State.TERMINATED) {
-                block.setFree();
-                freed = true;
+        int requiredMem = process.getMemoryMB();
+        int availableMem = 0;
+
+        for(MemoryBlock block : memoryBlocks) {
+            if(block.isFree()) {
+                availableMem += block.getSize();
             }
         }
 
-       if(freed) {
-           for(int i = 0; i < memoryBlocks.size(); i++) {
-               MemoryBlock block = memoryBlocks.get(i);
+        //no free block found, free terminated process (lazy release)
+        boolean freed = false;
+        for(MemoryBlock block: memoryBlocks) {
+            if(availableMem >= requiredMem) {
+                break;
+            }
 
-               if(block.isFree() && block.getSize() >= process.getMemoryMB()) {
-                   int remaining = block.getSize() - process.getMemoryMB();
+            if(!block.isFree() && block.getProcess().getState() == Process.State.TERMINATED) {
+                block.setFree();
+                availableMem += block.getSize();
+            }
+        }
 
-                   block.allocate(process);
-                   block.setSize(process.getMemoryMB());
+        mergeFreeBlocks();
 
-                   if (remaining > 0) {
-                       memoryBlocks.add(i + 1, new MemoryBlock(remaining));
-                   }
+        for(int i = 0; i < memoryBlocks.size(); i++) {
+            MemoryBlock block = memoryBlocks.get(i);
 
-                   return true;
-               }
-           }
-       }
+            if(block.isFree() && block.getSize() >= process.getMemoryMB()) {
+                int remaining = block.getSize() - process.getMemoryMB();
+
+                block.allocate(process);
+                block.setSize(process.getMemoryMB());
+
+                if (remaining > 0) {
+                    memoryBlocks.add(i + 1, new MemoryBlock(remaining));
+                }
+
+                return true;
+            }
+        }
 
         return false;
     }
 
     private void mergeFreeBlocks() {
-        for(int i = 0; i <memoryBlocks.size()-1; i++) {
+        for(int i = 0; i < memoryBlocks.size()-1; i ++) {
             MemoryBlock curr = memoryBlocks.get(i);
             MemoryBlock next = memoryBlocks.get(i+1);
 
             if(curr.isFree() && next.isFree()) {
-                int size = curr.getSize() + next.getSize();
-                curr.setSize(size);
+                curr.setSize(curr.getSize()+ next.getSize());
                 memoryBlocks.remove(i+1);
                 i--;
             }
