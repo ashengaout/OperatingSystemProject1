@@ -33,7 +33,7 @@ public class FCFSScheduler implements Scheduler {
 
                 //process will never be able to run
                 if (p.getMemoryMB() > memoryManager.getTotalMemory()) {
-                    System.out.println(STR."Process PID \{p.getID()} requires more memory than total available. Skipping.");
+                    System.out.println("Process PID "+p.getID()+" requires more memory than total available. Skipping.");
                     processList.remove(p);
                     continue;
                 }
@@ -41,7 +41,7 @@ public class FCFSScheduler implements Scheduler {
                 if(memoryManager.allocateProcess(p)) {
                     //only add if memory can be successfully allocated
                     //Sets process state to ready
-                    System.out.println(STR."Allocating process PID P\{p.getID()}");
+                    System.out.println("Allocating process PID P"+p.getID());
                     memoryManager.printMemoryState();
                     p.setState(Process.State.READY);
                     readyList.add(p);

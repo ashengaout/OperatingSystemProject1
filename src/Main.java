@@ -39,8 +39,8 @@ public class Main{
 
         System.out.println("First come first serve chart: ");
         printGanttChart(fcfsScheduler.getFCFS());
-        System.out.println(STR."Avg wait time: \{fcfsScheduler.calculateAvgWTS()}");
-        System.out.println(STR."Avg turnaround time: \{fcfsScheduler.calculateAvgTAT()}");
+        System.out.println("Avg wait time: " + fcfsScheduler.calculateAvgWTS());
+        System.out.println("Avg turnaround time: "+fcfsScheduler.calculateAvgTAT());
 
         System.out.println();
 
@@ -48,8 +48,8 @@ public class Main{
 
         System.out.println("Shortest job first chart: ");
         printGanttChart(sjpScheduler.getSJP());
-        System.out.println(STR."Avg wait time: \{sjpScheduler.calculateAvgWTS()}");
-        System.out.println(STR."Avg turnaround time: \{sjpScheduler.calculateAvgTAT()}");
+        System.out.println("Avg wait time: "+sjpScheduler.calculateAvgWTS());
+        System.out.println("Avg turnaround time: "+sjpScheduler.calculateAvgTAT());
     }
 
     //method for printing chart
@@ -84,7 +84,7 @@ public class Main{
         //print process labels
         for(ExecutionRecord record : fullTimeline) {
             int duration = record.getEndTime()- record.getStartTime();
-            String label = (record.getProcess() == null) ? "IDLE" : STR."P\{record.getProcess().getID()}";
+            String label = (record.getProcess() == null) ? "IDLE" : "P"+record.getProcess().getID();
 
             int padding = duration*2-label.length();
             int paddingLeft = Math.max(padding/2, 0);

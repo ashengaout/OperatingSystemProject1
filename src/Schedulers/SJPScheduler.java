@@ -38,14 +38,14 @@ public class SJPScheduler implements Scheduler {
                 Process p = processList.get(index);
 
                 if (p.getMemoryMB() > memoryManager.getTotalMemory()) {
-                    System.out.println(STR."Process PID \{p.getID()} requires more memory than total available. Skipping.");
+                    System.out.println("Process PID "+p.getID()+" requires more memory than total available. Skipping.");
                     processList.remove(p);
                     continue;
                 }
 
                 //allocate memory and set state to ready
                 if(memoryManager.allocateProcess(p)) {
-                    System.out.println(STR."Allocating process PID P\{p.getID()}");
+                    System.out.println("Allocating process PID P"+p.getID());
                     memoryManager.printMemoryState();
                     p.setState(Process.State.READY);
                     readyList.add(p);

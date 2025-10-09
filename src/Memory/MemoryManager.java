@@ -87,16 +87,16 @@ public class MemoryManager {
 
         for(MemoryBlock block : memoryBlocks) {
             if(block.isFree()) {
-                System.out.println(STR."    Free Block \{block.getSize()} MB");
+                System.out.println("    Free Block "+block.getSize()+" MB");
                 free += block.getSize();
             } else {
-                System.out.println(STR."    Allocated to PID P\{block.getProcess().getID()}: \{block.getSize()} MB ");
+                System.out.println("    Allocated to PID P"+block.getProcess().getID()+ ": "+block.getSize()+" MB ");
                 used += block.getSize();
             }
         }
 
-        System.out.println(STR."Total memory used: \{used} MB");
-        System.out.println(STR."Total memory free: \{free} MB");
+        System.out.println("Total memory used: "+used+" MB");
+        System.out.println("Total memory free: "+free+" MB");
         System.out.println("---------------------------");
     }
 
