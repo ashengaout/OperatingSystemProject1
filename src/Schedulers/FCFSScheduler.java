@@ -29,8 +29,26 @@ public class FCFSScheduler implements Scheduler {
 
             //adds arrived processes to ready list
             while(index < processList.size() && processList.get(index).getArrivalTime() <= currentTime) {
-                readyList.add(processList.get(index));
-                index++;
+                Process p = processList.get(index);
+
+                //process will never be able to run
+                if (p.getMemoryMB() > memoryManager.getTotalMemory()) {
+                    System.out.println(STR."Process PID \{p.getID()} requires more memory than total available. Skipping.");
+                    processList.remove(p);
+                    continue;
+                }
+
+                if(memoryManager.allocateProcess(p)) {
+                    //only add if memory can be successfully allocated
+                    //Sets process state to ready
+                    System.out.println(STR."Allocating process PID P\{p.getID()}");
+                    memoryManager.printMemoryState();
+                    p.setState(Process.State.READY);
+                    readyList.add(p);
+                    index++;
+                } else {
+                    break;
+                }
             }
 
             if(readyList.isEmpty()) {
@@ -38,28 +56,18 @@ public class FCFSScheduler implements Scheduler {
                 continue;
             }
 
-            Process p = readyList.peek();
+            Process p = readyList.poll();
+            p.setState(Process.State.RUNNING);
+            p.setStartTime(currentTime);
+            p.setEndTime(currentTime+ p.getBurstTime());
+            p.calculateTAT();
+            p.calculateWT();
 
-            if (p.getMemoryMB() > memoryManager.getTotalMemory()) {
-                System.out.println(STR."Process PID \{p.getID()} requires more memory than total available. Skipping.");
-                readyList.poll(); // remove from queue
-                continue;         // move to next process
-            }
+            timeline.add(new ExecutionRecord(p, p.getStartTime(), p.getEndTime()));
+            currentTime = p.getEndTime();
 
-            if(memoryManager.allocateProcess(p)) {
-                //run process since memory available
-                p = readyList.poll();
-                p.setStartTime(currentTime);
-                p.setEndTime(currentTime+ p.getBurstTime());
-                p.calculateTAT();
-                p.calculateWT();
-
-                timeline.add(new ExecutionRecord(p, p.getStartTime(), p.getEndTime()));
-                currentTime = p.getEndTime();
-                memoryManager.freeProcess(p);
-            } else {
-                currentTime++;
-            }
+            //sets state to terminated when finishes running
+            p.setState(Process.State.TERMINATED);
         }
 
         return timeline;

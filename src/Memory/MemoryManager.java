@@ -15,35 +15,55 @@ public class MemoryManager {
         this.totalMemory = totalMemory;
     }
 
+    //I am opting for the lazy release for first fit allocation
     public boolean allocateProcess(Process process) {
+
         for(int i = 0; i < memoryBlocks.size(); i++) {
             MemoryBlock block = memoryBlocks.get(i);
 
             if(block.isFree() && block.getSize() >= process.getMemoryMB()) {
-                if(block.getSize() > process.getMemoryMB()) {
-                    memoryBlocks.add(i+1, new MemoryBlock(block.getSize()-process.getMemoryMB()));
-                    block = memoryBlocks.get(i);
-                    block.allocate(process);
-                    block.setSize(process.getMemoryMB());
-                } else {
-                    block.allocate(process);
+                int remaining = block.getSize() - process.getMemoryMB();
+
+                block.allocate(process);
+                block.setSize(process.getMemoryMB());
+
+                if(remaining > 0 ) {
+                    memoryBlocks.add(i+1, new MemoryBlock(remaining));
                 }
 
                 return true;
             }
         }
 
-        return false;
-    }
-
-    public void freeProcess(Process process) {
-        for(MemoryBlock block : memoryBlocks) {
-            if(!block.isFree() && block.getProcess() == process) {
+        //no free block found, free terminated process (lazy release)
+        boolean freed = false;
+        for(MemoryBlock block: memoryBlocks) {
+            if(!block.isFree() && block.getProcess().getState() == Process.State.TERMINATED) {
                 block.setFree();
+                freed = true;
             }
         }
 
-        mergeFreeBlocks();
+       if(freed) {
+           for(int i = 0; i < memoryBlocks.size(); i++) {
+               MemoryBlock block = memoryBlocks.get(i);
+
+               if(block.isFree() && block.getSize() >= process.getMemoryMB()) {
+                   int remaining = block.getSize() - process.getMemoryMB();
+
+                   block.allocate(process);
+                   block.setSize(process.getMemoryMB());
+
+                   if (remaining > 0) {
+                       memoryBlocks.add(i + 1, new MemoryBlock(remaining));
+                   }
+
+                   return true;
+               }
+           }
+       }
+
+        return false;
     }
 
     private void mergeFreeBlocks() {
@@ -58,6 +78,26 @@ public class MemoryManager {
                 i--;
             }
         }
+    }
+
+    public void printMemoryState() {
+        System.out.println("Memory Blocks:");
+        int used = 0;
+        int free = 0;
+
+        for(MemoryBlock block : memoryBlocks) {
+            if(block.isFree()) {
+                System.out.println(STR."    Free Block \{block.getSize()} MB");
+                free += block.getSize();
+            } else {
+                System.out.println(STR."    Allocated to PID P\{block.getProcess().getID()}: \{block.getSize()} MB ");
+                used += block.getSize();
+            }
+        }
+
+        System.out.println(STR."Total memory used: \{used} MB");
+        System.out.println(STR."Total memory free: \{free} MB");
+        System.out.println("---------------------------");
     }
 
     public int getTotalMemory() {

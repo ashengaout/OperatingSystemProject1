@@ -1,6 +1,16 @@
 package Core;
 
 public class Process {
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
+    }
+
+    public enum State {NEW, READY, RUNNING, TERMINATED}
+
     private int ID;
     private int arrivalTime;
     private int burstTime;
@@ -10,6 +20,7 @@ public class Process {
     private int endTime;
     private int startTime;
     private int memoryMB;
+    private State state;
 
     /**
      * This class is for storing each process instance read from the file
@@ -23,6 +34,7 @@ public class Process {
         this.burstTime = burstTime;
         this.priority = priority;
         this.memoryMB = memory;
+        this.state = State.NEW;
     }
 
     public void calculateTAT() {

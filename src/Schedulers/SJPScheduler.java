@@ -35,8 +35,24 @@ public class SJPScheduler implements Scheduler {
 
             //adds processes that are arrived by current time
             while(index < processList.size() && processList.get(index).getArrivalTime() <= currentTime) {
-                readyList.add(processList.get(index));
-                index++;
+                Process p = processList.get(index);
+
+                if (p.getMemoryMB() > memoryManager.getTotalMemory()) {
+                    System.out.println(STR."Process PID \{p.getID()} requires more memory than total available. Skipping.");
+                    processList.remove(p);
+                    continue;
+                }
+
+                //allocate memory and set state to ready
+                if(memoryManager.allocateProcess(p)) {
+                    System.out.println(STR."Allocating process PID P\{p.getID()}");
+                    memoryManager.printMemoryState();
+                    p.setState(Process.State.READY);
+                    readyList.add(p);
+                    index++;
+                } else {
+                    break;
+                }
             }
 
             //CPU is idle, jump to next process arrival
@@ -45,30 +61,17 @@ public class SJPScheduler implements Scheduler {
                 continue;
             }
 
-            //picks shortest job from ready list
-            Process p = readyList.peek();
+            //run process since memory available
+            Process p = readyList.poll();
+            p.setState(Process.State.RUNNING);
+            p.setStartTime(currentTime);
+            p.setEndTime(currentTime+ p.getBurstTime());
+            p.calculateTAT();
+            p.calculateWT();
 
-            if (p.getMemoryMB() > memoryManager.getTotalMemory()) {
-                System.out.println(STR."Process PID \{p.getID()} requires more memory than total available. Skipping.");
-                readyList.poll(); // remove from queue
-                continue;         // move to next process
-            }
-
-            //wait until memory is available
-            if(memoryManager.allocateProcess(p)) {
-                //run process since memory available
-                p = readyList.poll();
-                p.setStartTime(currentTime);
-                p.setEndTime(currentTime+ p.getBurstTime());
-                p.calculateTAT();
-                p.calculateWT();
-
-                timeline.add(new ExecutionRecord(p, p.getStartTime(), p.getEndTime()));
-                currentTime = p.getEndTime();
-                memoryManager.freeProcess(p);
-            } else {
-                currentTime++;
-            }
+            timeline.add(new ExecutionRecord(p, p.getStartTime(), p.getEndTime()));
+            currentTime = p.getEndTime();
+            p.setState(Process.State.TERMINATED);
         }
 
         return timeline;
