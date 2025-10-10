@@ -3,15 +3,19 @@ package Memory;
 import Core.Process;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class MemoryManager {
     private List<MemoryBlock> memoryBlocks;
+    private Queue<Process> fifoQueue;
     private int totalMemory;
 
     public MemoryManager(int totalMemory) {
         memoryBlocks = new ArrayList<>();
         memoryBlocks.add(new MemoryBlock(totalMemory));
+        this.fifoQueue = new LinkedList<>();
         this.totalMemory = totalMemory;
     }
 
@@ -26,6 +30,7 @@ public class MemoryManager {
 
                 block.allocate(process);
                 block.setSize(process.getMemoryMB());
+                fifoQueue.add(process);
 
                 if(remaining > 0 ) {
                     memoryBlocks.add(i+1, new MemoryBlock(remaining));
@@ -38,6 +43,7 @@ public class MemoryManager {
         int requiredMem = process.getMemoryMB();
         int availableMem = 0;
 
+        //finds available memory
         for(MemoryBlock block : memoryBlocks) {
             if(block.isFree()) {
                 availableMem += block.getSize();
@@ -45,15 +51,14 @@ public class MemoryManager {
         }
 
         //no free block found, free terminated process (lazy release)
-        boolean freed = false;
-        for(MemoryBlock block: memoryBlocks) {
-            if(availableMem >= requiredMem) {
-                break;
-            }
+        while(!fifoQueue.isEmpty() && availableMem < requiredMem) {
+            Process oldest = fifoQueue.poll();
 
-            if(!block.isFree() && block.getProcess().getState() == Process.State.TERMINATED) {
-                block.setFree();
-                availableMem += block.getSize();
+            for(MemoryBlock block : memoryBlocks) {
+                if(!block.isFree() && block.getProcess() == oldest) {
+                    availableMem += block.getSize();
+                    block.setFree();
+                }
             }
         }
 
@@ -67,6 +72,7 @@ public class MemoryManager {
 
                 block.allocate(process);
                 block.setSize(process.getMemoryMB());
+                fifoQueue.add(process);
 
                 if (remaining > 0) {
                     memoryBlocks.add(i + 1, new MemoryBlock(remaining));
@@ -118,5 +124,13 @@ public class MemoryManager {
 
     public void setTotalMemory(int totalMemory) {
         this.totalMemory = totalMemory;
+    }
+
+    public Queue<Process> getFifoQueue() {
+        return fifoQueue;
+    }
+
+    public void setFifoQueue(Queue<Process> fifoQueue) {
+        this.fifoQueue = fifoQueue;
     }
 }
